@@ -9,8 +9,8 @@ const utils = @import("utils.zig");
 const DEFAULT_PORT: u16 = 23;
 
 const Errors = error{
-    HostMissing,
-    InvalidPort,
+    MissingArgument,
+    InvalidUri,
 };
 
 pub fn main() !void {
@@ -24,8 +24,7 @@ pub fn main() !void {
     // We can use `parseParamsComptime` to parse a string into an array of `Param(Help)`
     const params = comptime clap.parseParamsComptime(
         \\-h, --help                Display this help.
-        \\<str>                     The host to connect to.
-        \\<str>                     The port to connect to.
+        \\<str>                     The telnet URI to connect to.
         \\
     );
 
@@ -45,26 +44,41 @@ pub fn main() !void {
         return clap.help(std.io.getStdOut().writer(), clap.Help, &params, .{});
     } else {
         if (res.positionals.len < 1) {
-            std.log.err("Missing host. Use -h to print the help.\n", .{});
-            return error.HostMissing;
+            // No args are given
+            std.log.err("Missing telnet URI. Use -h to print the help.\n", .{});
+            return error.MissingArgument;
         }
 
+        // make uri scheme optional
+        const uriStr = res.positionals[0];
+        const uriStrWithoutPrefix = utils.removePrefix(uriStr, "telnet://");
+        const result: []u8 = try std.fmt.allocPrint(alloc, "telnet://{s}", .{uriStrWithoutPrefix});
+        defer alloc.free(result);
+
+        print("CONCAT URI: {s}\n", .{result});
+
+        const uri = std.Uri.parse(result) catch |err| {
+            std.log.err("Invalid telnet URI ({any}): {s}\n", .{ err, uriStr });
+            return error.InvalidUri;
+        };
+
+        // Handle default port
         const port = port: {
-            if (res.positionals.len < 2) {
+            if (uri.port != null) {
+                break :port uri.port.?;
+            } else {
                 std.log.warn("Missing port, using default port {d}.\n", .{DEFAULT_PORT});
                 break :port DEFAULT_PORT;
-            } else {
-                break :port std.fmt.parseInt(u16, res.positionals[1], 10) catch {
-                    std.log.err("Invalid port: {s}\n", .{res.positionals[1]});
-                    return error.InvalidPort;
-                };
             }
         };
 
-        const host: []const u8 = utils.removePrefix(res.positionals[0], "telnet://");
+        if (uri.host == null) {
+            std.log.err("Missing host in telnet URI: {s}\n", .{uriStr});
+            return error.InvalidUri;
+        }
 
-        std.log.info("Connecting to {s}:{d}\n", .{ host, port });
-        const stream = try net.tcpConnectToHost(alloc, host, port);
+        std.log.info("Connecting to {?s}:{d}\n", .{ uri.host, port });
+        const stream = try net.tcpConnectToHost(alloc, uri.host.?, port);
         defer stream.close();
 
         var tnClient = client.TelnetClient.init(stream);
