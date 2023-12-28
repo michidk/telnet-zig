@@ -1,0 +1,27 @@
+name: Test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/**'
+      - 'build.zig'
+      - 'build.zig.zon'
+
+env:
+  ZIG_VERSION: 0.11.0
+
+jobs:
+  test:
+    name: Tests on Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: {{ env.ZIG_VERSION }}
+      - uses: Hanaasagi/zig-action-cache@v1
+      - name: Build
+        run: zig build
+      - name: Run Tests
+        run: zig build test
