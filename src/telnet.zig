@@ -1,6 +1,8 @@
 pub const DEFAULT_PORT: u16 = 23;
 
 pub const IAC_BYTE: u8 = 255;
+pub const SB_BYTE: u8 = 250;
+pub const SE_BYTE: u8 = 240;
 
 pub const Command = enum(u8) {
     se = 240, // End of subnegotiation parameters
@@ -24,7 +26,7 @@ pub const Option = enum(u8) {
     transmitBinary = 0, // Binary Transmission (RFC 856)
     echo = 1, // Echo (RFC 857)
     reconnection = 2, // Reconnection (NIC 15391 of 1973)
-    suppressGoAhead = 3, // Suppress Go Ahead (RFC 858)
+    suppressGoAhead = 3, // Suppress Go Ahead (RFC 858): no "go ahead" signal will be sent (required for half-duplex transmissions) -> full-duplex
     approxMessageSizeNegotiation = 4, // Approx Message Size Negotiation (NIC 15393 of 1973)
     status = 5, // Status (RFC 859)
     timingMark = 6, // Timing Mark (RFC 860)
@@ -78,3 +80,7 @@ pub const Option = enum(u8) {
     unassigned141To254 = 141, // Unassigned (141-254)
     extendedOptionsList = 255, // Extended-Options-List (RFC 861)
 };
+
+pub fn instruction(command: Command, option: Option) [3]u8 {
+    return [3]u8{ IAC_BYTE, @intFromEnum(command), @intFromEnum(option) };
+}
