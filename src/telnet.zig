@@ -1,3 +1,5 @@
+pub const DEFAULT_PORT: u16 = 23;
+
 pub const IAC_BYTE: u8 = 255;
 
 pub const Command = enum(u8) {
