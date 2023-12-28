@@ -43,6 +43,7 @@ pub fn parse(alloc: std.mem.Allocator) !?Opts {
     // CLI Parameters
     const params = comptime clap.parseParamsComptime(
         \\-h, --help                Display this help.
+        \\-u, --usage               Displays a short command usage
         \\<str>                     The telnet URI to connect to.
         \\
     );
@@ -60,6 +61,9 @@ pub fn parse(alloc: std.mem.Allocator) !?Opts {
 
     if (res.args.help != 0) {
         try clap.help(std.io.getStdOut().writer(), clap.Help, &params, .{});
+        return null;
+    } else if (res.args.usage != 0) {
+        try clap.usage(std.io.getStdOut().writer(), clap.Help, &params);
         return null;
     } else {
         if (res.positionals.len < 1) {
