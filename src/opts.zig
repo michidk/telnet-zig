@@ -4,6 +4,11 @@ const utils = @import("utils.zig");
 const telnet = @import("telnet.zig");
 const io = std.io;
 
+const OptErrors = error{
+    MissingArgument,
+    InvalidUri,
+};
+
 pub const Opts = struct {
     alloc: std.mem.Allocator,
     uriStr: []const u8,

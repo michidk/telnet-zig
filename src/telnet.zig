@@ -1,8 +1,12 @@
+const std = @import("std");
+
+// Default port for the application
 pub const DEFAULT_PORT: u16 = 23;
 
-pub const IAC_BYTE: u8 = 255;
-pub const SB_BYTE: u8 = 250;
-pub const SE_BYTE: u8 = 240;
+// Constant byte values for Telnet protocol
+pub const IAC_BYTE: u8 = 255; // "Interpret as Command" byte
+pub const IS_BYTE: u8 = 0; // "IS" byte
+pub const SEND_BYTE: u8 = 1; // "SEND" byte
 
 pub const Command = enum(u8) {
     se = 240, // End of subnegotiation parameters
@@ -15,18 +19,19 @@ pub const Command = enum(u8) {
     ec = 247, // Erase character
     el = 248, // Erase line
     ga = 249, // Go ahead
-    sb = 250, // Subnegotiation of the indicated option
-    will = 251, // Indicates the desire to begin performing, or confirmation that you are now performing, the indicated option
-    wont = 252, // Indicates the refusal to perform, or continue performing, the indicated option
-    do = 253, // Indicates the request that the other party perform, or confirmation that you are expecting the other party to perform, the indicated option
-    dont = 254, // Indicates the demand that the other party stop performing, or confirmation that you are no longer expecting the other party to perform, the indicated option
+    sb = 250, // Start of subnegotiation of the indicated option
+    will = 251, // Willing to begin performing the indicated option
+    wont = 252, // Refusing to perform the indicated option
+    do = 253, // Request to perform the indicated option
+    dont = 254, // Demand to stop performing the indicated option
+    iac = 255, // data byte 255
 };
 
 pub const Option = enum(u8) {
     transmitBinary = 0, // Binary Transmission (RFC 856)
     echo = 1, // Echo (RFC 857)
     reconnection = 2, // Reconnection (NIC 15391 of 1973)
-    suppressGoAhead = 3, // Suppress Go Ahead (RFC 858): no "go ahead" signal will be sent (required for half-duplex transmissions) -> full-duplex
+    suppressGoAhead = 3, // Suppress Go Ahead (RFC 858): No "go ahead" signal will be sent (required for half-duplex transmissions) -> full-duplex
     approxMessageSizeNegotiation = 4, // Approx Message Size Negotiation (NIC 15393 of 1973)
     status = 5, // Status (RFC 859)
     timingMark = 6, // Timing Mark (RFC 860)
@@ -47,7 +52,7 @@ pub const Option = enum(u8) {
     supdup = 21, // SUPDUP (RFC 736, RFC 734)
     supdupOutput = 22, // SUPDUP Output (RFC 749)
     sendLocation = 23, // Send Location (RFC 779)
-    terminalType = 24, // Terminal Type (RFC 1091): requests that the other end of the connection transmit, in ASCII format, the name of the terminal type that it is using
+    terminalType = 24, // Terminal Type (RFC 1091): Requests the name of the terminal type in ASCII format
     endOfRecord = 25, // End of Record (RFC 885)
     tacacsUserIdentification = 26, // TACACS User Identification (RFC 927)
     outputMarking = 27, // Output Marking (RFC 933)
@@ -81,6 +86,21 @@ pub const Option = enum(u8) {
     extendedOptionsList = 255, // Extended-Options-List (RFC 861)
 };
 
+// Function to create an instruction array from a command and option
 pub fn instruction(command: Command, option: Option) [3]u8 {
     return [3]u8{ IAC_BYTE, @intFromEnum(command), @intFromEnum(option) };
+}
+
+// Function to create an instruction array from a command and option
+pub fn subnegotiate(option: Option, comptime payload: []const u8) [payload.len + 5]u8 {
+    var data = [_]u8{0} ** (payload.len + 5);
+
+    data[0] = IAC_BYTE;
+    data[1] = @intFromEnum(Command.sb);
+    data[2] = @intFromEnum(option);
+    std.mem.copy(u8, data[3 .. 3 + payload.len], payload);
+    data[payload.len + 3] = IAC_BYTE;
+    data[payload.len + 4] = @intFromEnum(Command.se);
+
+    return data;
 }
