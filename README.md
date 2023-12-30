@@ -1,6 +1,6 @@
 # Telnet Client in Zig
 
-[![MIT License](https://img.shields.io/badge/license-MIT-blue)](https://choosealicense.com/licenses/mit/) [![Run Zig Tests](https://github.com/michidk/telnet-zig/actions/workflows/test.yaml/badge.svg)](https://github.com/michidk/telnet-zig/actions/workflows/test.yaml)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue)](https://choosealicense.com/licenses/mit/) [![Build Project](https://github.com/michidk/telnet-zig/actions/workflows/build.yaml/badge.svg)](https://github.com/michidk/telnet-zig/actions/workflows/build.yaml) [![Run Zig Tests](https://github.com/michidk/telnet-zig/actions/workflows/test.yaml/badge.svg)](https://github.com/michidk/telnet-zig/actions/workflows/test.yaml)
 
 This project is a Zig implementation of a simple telnet client.
 
