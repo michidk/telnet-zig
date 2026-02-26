@@ -37,7 +37,7 @@ jobs:
         run: zig build -Dtarget=${{ matrix.target }}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: telnet-zig-${{ matrix.target }}
           path: zig-out/bin/
